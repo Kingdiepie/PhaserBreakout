@@ -1,3 +1,4 @@
+// Init game variables.
 var game = new Phaser.Game(800, 600);
 var speed = 350;
 var ballSpeed = 450;
@@ -6,8 +7,13 @@ var level = 1;
 var Mlevel = 7;
 var lives, bricksLeft;
 
-  
 
+
+/**
+ * Render a box. Use canvas/bitmap data.
+ * 
+ * @param {object} options Array of options. Keys: length, width, color
+ */
 var box = function(options) {
 	var bmd = game.add.bitmapData(options.length, options.width);
 	bmd.ctx.beginPath();
@@ -17,67 +23,84 @@ var box = function(options) {
 	return bmd;
 };
 
+
+
+/**
+ * The main state of the app.
+ */
 var mainState = {
-  preload: function(){
-    var music;
-    game.load.audio('sound1',['track01.mp3','track01.ogg']);
-  },
-  
+
+
+
+	/**
+	 * Preload assets.
+	 */
+	preload: function(){
+		var music;
+		game.load.audio('sound1',['track01.mp3','track01.ogg']);
+	},
+	
+
+
+	/**
+	 * Create the main game scene.
+	 */
 	create: function() {
+
 		lives = 3;
 		music = game.add.audio('sound1');
-    music.loopFull(1);
+		music.loopFull(1);
 		game.stage.backgroundColor = '#BDC2C5';
 		game.physics.startSystem(Phaser.Physics.ARCADE);
 		game.world.enableBody = true;
-
+		
 		this.player = game.add.sprite(340, 565, box({
 			length: 120,
 			width: 16,
 			color: '#66FF22'
 		}));
-
+		
 		this.ball = game.add.sprite(400, 300, box({
 			length: 12,
 			width: 12,
 			color: '#374A59'
 		}));
-
+		
 		this.cursor = game.input.keyboard.createCursorKeys();
 		this.player.body.collideWorldBounds = true;
 		this.vwalls = game.add.group();
 		this.vwalls.enableBody = true;
 		this.hwalls = game.add.group();
 		this.hwalls.enableBody = true;
-
+		
 		var top = this.hwalls.create(0, 0, box({
 			length: game.world.width,
 			width: 16,
 			color: '#374A59'
 		}));
-
+		
 		var bottom = this.hwalls.create(0, game.world.height - 16, box({
 			length: game.world.width,
 			width: 16,
 			color: '#374A59'
 		}));
-
+		
 		var leftWall = this.vwalls.create(0, 16, box({
 			length: 16,
 			width: game.world.height - 32,
 			color: '#374A59'
 		}));
-
+		
 		var rightWall = this.vwalls.create(game.world.width - 16, 16, box({
 			length: 16,
 			width: game.world.height - 32,
 			color: '#374A59'
 		}));
-
+		
 		this.brick = game.add.group();
 		this.brick.enableBody = true;
 		var bricks = [];
-
+		
 		if (level === 1) {
 			for (i = 0; i < 5; i++) {
 				for (j = 0; j < 6; j++) {
@@ -116,11 +139,11 @@ var mainState = {
 			for (i = 0; i < 10; i++) {
 				for (j = 0; j < 6; j++) {
 					if (i % 2 === 0 || j % 2 === 1)
-						bricks.push(this.brick.create(i * 70 + 60, j * 40 + 40, box({
-							length: 40,
-							width: 10,
-							color: '#664488'
-						})));
+					bricks.push(this.brick.create(i * 70 + 60, j * 40 + 40, box({
+						length: 40,
+						width: 10,
+						color: '#664488'
+					})));
 				}
 			}
 		}
@@ -139,18 +162,18 @@ var mainState = {
 			for (i = 1; i <= 11; i++) {
 				for (j = 1; j <= 9; j++) {
 					if (j === i || j === Math.abs(i - 11))
-						bricks.push(this.brick.create(i * 70, j * 40, box({
-							length: 40,
-							width: 10,
-							color: '#664488'
-						})));
+					bricks.push(this.brick.create(i * 70, j * 40, box({
+						length: 40,
+						width: 10,
+						color: '#664488'
+					})));
 				}
 			}
 		}
 		if (level === Mlevel) {
 			game.state.start('win');
 		}
-
+		
 		top.body.immovable = true;
 		bottom.body.immovable = true;
 		rightWall.body.immovable = true;
@@ -160,7 +183,7 @@ var mainState = {
 		this.ball.body.bounce.setTo(1, 1);
 		this.ball.body.collideWorldBounds = true;
 		bricksLeft = bricks.length;
-
+		
 		text1 = game.add.text(50, 584, 'Bricks Left: ' + bricksLeft, {
 			font: "12px Arial",
 			fill: "#ffffff",
@@ -176,14 +199,19 @@ var mainState = {
 			fill: "#ffffff",
 			align: "left"
 		});
-
+		
 	},
+	
 
+
+	/**
+	 * Update main game state.
+	 */
 	update: function() {
 		if (this.ball.body.velocity.y > 300)
-			this.ball.body.velocity.y = 300;
+		this.ball.body.velocity.y = 300;
 		if (this.ball.body.velocity.x > 300)
-			this.ball.body.velocity.x = 300;
+		this.ball.body.velocity.x = 300;
 		text1.setText('Bricks Left: ' + bricksLeft);
 		game.physics.arcade.collide(this.player, this.vwalls);
 		game.physics.arcade.collide(this.player, this.hwalls);
@@ -203,9 +231,14 @@ var mainState = {
 			music.stop();
 			game.state.start('main');
 		}
-
+		
 	},
+	
 
+
+	/**
+	 * Helper function to calculate bounce from the wall.
+	 */
 	hwallBounce: function(i, j) {
 		if (this.ball.y >= game.world.height - 40) {
 			lives--;
@@ -221,7 +254,12 @@ var mainState = {
 			this.ball.body.velocity.y *= -1;
 		}
 	},
+	
 
+
+	/**
+	 * Helper function to calculate the bounce from the paddle.
+	 */
 	bounceBallPaddle: function(player, ball) {
 		if (this.ball.x < this.player.x + 60) {
 			dif = this.player.x + 60 - this.ball.x;
@@ -232,17 +270,34 @@ var mainState = {
 		this.ball.body.velocity.x += dif * 2 + Math.floor(Math.random() * (20 - (-20) + 1)) + (-20);
 		//this.ball.body.velocity.x *=  -1;
 	},
+	
 
+
+	/**
+	 * Helper function to calculate the bounce from a brick.
+	 */
 	bounceBrick: function(ball, brick) {
 		brick.kill();
 		bricksLeft--;
 		this.ball.body.velocity.y *= -1;
 	}
+
+
+
 };
 
-///////////Static States
 
-var StartState = {
+
+/**
+ * Initial state. Show help texts.
+ */
+var startState = {
+
+
+
+	/**
+	 * Create scene.
+	 */
 	create: function() {
 		game.stage.backgroundColor = '#BDC2C5';
 		label = game.add.text(game.world.width / 2, game.world.height / 2 - 50, 'Breakout', {
@@ -265,14 +320,34 @@ var StartState = {
 		label3.anchor.setTo(0.5, 0.5);
 		this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 	},
+
+
+
+	/**
+	 * Update. Basically listen for spacebar hit.
+	 */
 	update: function() {
 		if (this.spacebar.isDown) {
 			game.state.start('main');
 		}
 	}
+
+
+
 };
 
+
+
+/**
+ * State displayed when the game is over.
+ */
 var gameOverState = {
+
+
+
+	/**
+	 * Display a text.
+	 */
 	create: function() {
 		label = game.add.text(game.world.width / 2, game.world.height / 2, 'Game Over\nPress SPACE to restart', {
 			font: '22px Arial',
@@ -282,14 +357,34 @@ var gameOverState = {
 		label.anchor.setTo(0.5, 0.5);
 		this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 	},
+
+
+
+	/**
+	 * Wait for user input.
+	 */
 	update: function() {
 		if (this.spacebar.isDown) {
 			game.state.start('main');
 		}
 	}
+
+
+
 };
 
+
+
+/**
+ * State displayed if the player wins the game.
+ */
 var winState = {
+
+
+
+	/**
+	 * Display the text.
+	 */
 	create: function() {
 		label = game.add.text(game.world.width / 2, game.world.height / 2, 'You Win\nYou completed all the levels, press SPACE to restart', {
 			font: '24px Arial',
@@ -299,16 +394,30 @@ var winState = {
 		label.anchor.setTo(0.5, 0.5);
 		this.spacebar = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 	},
+
+
+
+	/**
+	 * Wait for user input.
+	 */
 	update: function() {
 		if (this.spacebar.isDown) {
 			level = 1;
 			game.state.start('main');
 		}
 	}
+
+
+
 };
 
+
+
+// Add states.
 game.state.add('main', mainState);
 game.state.add('go', gameOverState);
-game.state.add('begin', StartState);
+game.state.add('begin', startState);
 game.state.add('win', winState);
+
+// Start the app.
 game.state.start('begin');
